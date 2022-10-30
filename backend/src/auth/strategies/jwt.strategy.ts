@@ -19,7 +19,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 		});
 	}
 
+	// функция будет брать из токена значение "_id", производить поиск пользователя с этим "_id"
+	// и добавлять к объекту Request все данные этого пользователя из БД
 	async validate({ _id }: Pick<UserModel, "_id">) {
 		return await this.UserModel.findById({ _id }).exec(); // exec - execute для выполнения запроса
 	}
 }
+
+// метод AuthGuard("jwt") из "@nestjs/passport" в случае добавления декоратора, будет валидировать токен
+// и если токен валидный то разрешит доступ к эндпойнту, но кроме этого, дописав метод "validate"
+// классу JwtStrategy, мы решили добавлять к запросу данные пользователя из БД

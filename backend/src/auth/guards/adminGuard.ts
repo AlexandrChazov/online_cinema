@@ -11,10 +11,11 @@ export class AdminGuard implements CanActivate {
 
 	canActivate(context: ExecutionContext): boolean {
 		const request = context.switchToHttp().getRequest<{ user: UserModel }>();
+
+		// метод validate класса JwtStrategy ранее добавил к объекту Request объект user с данными пользователя
 		const user = request.user;
 
 		if (!user.isAdmin) throw new ForbiddenException("You have no rights");
-
 		return user.isAdmin;
 	}
 }

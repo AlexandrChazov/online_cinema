@@ -5,8 +5,10 @@ type TypeData = keyof UserModel;
 
 // https://docs.nestjs.com/custom-decorators
 export const User = createParamDecorator(
-	(data: TypeData, ctx: ExecutionContext) => {
-		const request = ctx.switchToHttp().getRequest();
+	(data: TypeData, context: ExecutionContext) => {
+		const request = context.switchToHttp().getRequest();
+
+		// метод validate класса JwtStrategy ранее добавил к объекту Request объект "user" с данными пользователя
 		const user = request.user;
 		return data ? user[data] : user;
 	}
