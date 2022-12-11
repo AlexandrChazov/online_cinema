@@ -9,7 +9,7 @@ import { path } from "app-root-path";
 		// чтобы папка uploads стала статичной и можно было получать файлы через GET запрос по url
 		ServeStaticModule.forRoot({
 			rootPath: `${path}/uploads`, // можно обойтись и без библиотеки: join(__dirname, '..', 'uploads')
-			serveRoot: "/uploads"
+			serveRoot: "/uploads" // если не указать то будет отправляться файл "index.html"
 		})
 	],
 	controllers: [FileController],
