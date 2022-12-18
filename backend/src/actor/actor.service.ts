@@ -33,11 +33,27 @@ export class ActorService {
 			};
 		}
 
-		// todo Aggregation
-
-		return await this.ActorModel.find(options)
-			.select("-updatedAt -v") // отбрасываем св-ва, которые нам не нужны
-			.sort({ createdAt: "desc" }) // сверху списка будут те юзеры, которые зарегались раньше остальных
+		return await this.ActorModel.aggregate() // используем агрегацию
+			.match(options) // найти элементы по опциям, тоже самое что и команда find
+			// применяет к коллекции "left outer join"
+			.lookup({
+				from: "Movie", // берём коллекцию "Movie"
+				foreignField: "actors", // значения поля "actors" из коллекции "Movie"
+				localField: "_id", // сравниваем с "id" актёров
+				as: "movies" // полученный массив фильмов сохраняем как поле "movies"
+			})
+			.addFields({
+				countMovies: {
+					$size: "$movies" // "$movies" - означает что мы обращаемся к полю "movies", и узнаём длину этого массива
+				} // т.о. получаем кол-во фильмов, в которых снимался актёр
+			})
+			// тоже самое, что и select
+			.project({
+				__v: 0, // убираем поле "__v"
+				updatedAt: 0, // убираем поле "updatedAt"
+				movies: 0 // убираем уже не нужное нам поле "movies"
+			})
+			.sort({ createdAt: -1 }) // сверху списка будут те юзеры, которые зарегались раньше остальных
 			.exec();
 	}
 
