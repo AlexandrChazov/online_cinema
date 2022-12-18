@@ -4,6 +4,7 @@ import { UserModel } from "./user.model";
 import { ModelType } from "@typegoose/typegoose/lib/types";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { genSalt, hash } from "bcryptjs";
+import { Types } from "mongoose";
 
 @Injectable()
 export class UserService {
@@ -70,5 +71,26 @@ export class UserService {
 		// запросы Mongoose не являются промисами, они возвращают "thenable", это не совсем промис хотя и похож
 		// "exec()" пишется для возвращения реального промиса
 		// иначе вторым параметром нужно передавать колбэк User.findOne({ name: 'daniel' }, function (err, user) {}
+	}
+
+	async toggleFavorite(movieId: Types.ObjectId, user: UserModel) {
+		const { _id, favorites } = user;
+		await this.UserModel.findByIdAndUpdate(_id, {
+			favorites: favorites.includes(movieId)
+				? favorites.filter(id => String(id) !== String(movieId))
+				: [...favorites, movieId]
+		});
+	}
+
+	async getFavoriteMovies(_id: Types.ObjectId) {
+		return await this.UserModel.findById(_id, "favorites") // берём данные из поля "favorites" указанного юзера (массив id-шников)
+			.populate({
+				path: "favorites", // заменяем эти данные (id-шники любимых фильмов) на развёрнутые описания фильмов
+				populate: {
+					path: "genres" // в полученных развёрнутых описаниях фильмов поле "genres" (id-шки жанров) заменяем на развёрнутые описания жанров
+				}
+			})
+			.exec()
+			.then(data => data.favorites); // возвращаем только поле "favorites"
 	}
 }
