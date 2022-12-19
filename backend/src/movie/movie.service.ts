@@ -4,11 +4,13 @@ import { ModelType } from "@typegoose/typegoose/lib/types";
 import { MovieModel } from "./movie.model";
 import { UpdateMovieDto } from "./dto/update-movie.dto";
 import { Types } from "mongoose";
+import { TelegramService } from "../telegram/telegram.service";
 
 @Injectable()
 export class MovieService {
 	constructor(
-		@InjectModel(MovieModel) private readonly MovieModel: ModelType<MovieModel>
+		@InjectModel(MovieModel) private readonly MovieModel: ModelType<MovieModel>,
+		private readonly telegramService: TelegramService
 	) {}
 
 	async getAll(searchTerm?: string) {
@@ -110,6 +112,10 @@ export class MovieService {
 
 	async update(_id: string, dto: UpdateMovieDto) {
 		/* Telegram notification */
+		if (!dto.isSendTelegram) {
+			await this.sendNotification(dto);
+			dto.isSendTelegram = true;
+		}
 
 		const updateDoc = await this.MovieModel.findByIdAndUpdate(_id, dto, {
 			new: true // создастся новая запись
@@ -124,5 +130,25 @@ export class MovieService {
 			throw new NotFoundException("Movie not found");
 		}
 		return deletedDoc;
+	}
+
+	async sendNotification(dto: UpdateMovieDto) {
+		if (process.env.NODE_ENV !== "development") {
+			await this.telegramService.sendPhoto(dto.poster);
+		}
+		const message = `<b>${dto.title}</b>`;
+
+		await this.telegramService.sendMessage(message, {
+			reply_markup: {
+				inline_keyboard: [
+					[
+						{
+							url: "https://okko.tv/movie/free-guy",
+							text: "🍿 Go to watch"
+						}
+					]
+				]
+			}
+		});
 	}
 }
