@@ -47,7 +47,7 @@ export class MovieService {
 	}
 
 	async getByGenres(genreIds: Types.ObjectId[]) {
-		const docs = await this.MovieModel.findOne({
+		const docs = await this.MovieModel.find({
 			genres: { $in: genreIds } // $in - ищем массив в массиве
 		}).exec();
 		if (!docs) throw new NotFoundException("Movies not found");
